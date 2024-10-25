@@ -128,6 +128,21 @@ func (s *Storage) GetBlockHeader(bHash []byte) (*core.BlockHeader, error) {
 	return res, err
 }
 
+// GetBlock read a block from the database
+func (s *Storage) GetBlock(bHash []byte) (*core.Block, error) {
+	var res *core.Block
+	err := s.DataBase.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(s.blockBucket))
+		bEncoded := bucket.Get(bHash)
+		if bEncoded == nil {
+			return errors.New("the block is not existed")
+		}
+		res = core.DecodeB(bEncoded)
+		return nil
+	})
+	return res, err
+}
+
 // GetNewestBlockHash read the Newest block hash
 func (s *Storage) GetNewestBlockHash() ([]byte, error) {
 	var nhb []byte
