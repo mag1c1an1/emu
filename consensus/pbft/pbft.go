@@ -53,7 +53,7 @@ type ConsensusNode struct {
 	height2Digest     map[uint64]string               // sequence (block height) -> request, fast read
 
 	// pbft stage wait
-	pbftStage              atomic.Int32 // 1->Preprepare, 2->Prepare, 3->Commit, 4->Done
+	pbftStage              atomic.Int32 // 1->Preprepare, 2->Prepare, 3->Commit, 4->Done, 5 -> view change
 	pbftLock               sync.Mutex
 	conditionalVarPbftLock sync.Cond
 
@@ -126,8 +126,13 @@ func NewPbftNode(shardID, nodeID uint64, pcc *params.ChainConfig, messageHandleT
 
 	// choose how to handle the messages in pbft or beyond pbft
 	switch string(messageHandleType) {
-	case "Normal":
-		panic("GG")
+	default:
+		p.ihm = &NormalExtraInnerHandleMod{
+			pbftNode: p,
+		}
+		p.ohm = &NormalExtraOuterHandleMod{
+			pbftNode: p,
+		}
 	}
 
 	// set pbft stage now
@@ -147,6 +152,16 @@ func (p *ConsensusNode) handleMessage(msg []byte) {
 		go p.handlePrepare(content)
 	case message.CCommit:
 		go p.handleCommit(content)
+	case message.CRequestOldRequest:
+		p.handleRequestOldSeq(content)
+	case message.CSendOldRequest:
+		p.handleSendOldSeq(content)
+	case message.ViewChangePropose:
+		p.handleViewChangeMsg(content)
+	case message.NewChange:
+		p.handleNewViewMsg(content)
+	case message.CStop:
+		p.WaitToStop()
 	default:
 		p.ohm.HandleMessageOutsidePBFT(msgType, content)
 	}

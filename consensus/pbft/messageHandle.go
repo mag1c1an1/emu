@@ -291,8 +291,8 @@ func (p *ConsensusNode) handleCommit(content []byte) {
 // if the request is correct, the main node will send
 // block back to the message sender.
 // now this function can send both block and partition
-func (p *PbftConsensusNode) handleRequestOldSeq(content []byte) {
-	if uint64(p.view.Load()) != p.NodeID {
+func (p *ConsensusNode) handleRequestOldSeq(content []byte) {
+	if uint64(p.view.Load()) != p.NodeId {
 		return
 	}
 
@@ -301,25 +301,25 @@ func (p *PbftConsensusNode) handleRequestOldSeq(content []byte) {
 	if err != nil {
 		log.Panic()
 	}
-	p.pl.Plog.Printf("S%dN%d : received the old message requst from ...", p.ShardID, p.NodeID)
+	p.pl.Plog.Printf("S%dN%d : received the old message requst from ...", p.ShardId, p.NodeId)
 	rom.SenderNode.PrintNode()
 
 	oldR := make([]*message.Request, 0)
 	for height := rom.SeqStartHeight; height <= rom.SeqEndHeight; height++ {
 		if _, ok := p.height2Digest[height]; !ok {
-			p.pl.Plog.Printf("S%dN%d : has no this digest to this height %d\n", p.ShardID, p.NodeID, height)
+			p.pl.Plog.Printf("S%dN%d : has no this digest to this height %d\n", p.ShardId, p.NodeId, height)
 			break
 		}
 		if r, ok := p.requestPool[p.height2Digest[height]]; !ok {
-			p.pl.Plog.Printf("S%dN%d : has no this message to this digest %d\n", p.ShardID, p.NodeID, height)
+			p.pl.Plog.Printf("S%dN%d : has no this message to this digest %d\n", p.ShardId, p.NodeId, height)
 			break
 		} else {
 			oldR = append(oldR, r)
 		}
 	}
-	p.pl.Plog.Printf("S%dN%d : has generated the message to be sent\n", p.ShardID, p.NodeID)
+	p.pl.Plog.Printf("S%dN%d : has generated the message to be sent\n", p.ShardId, p.NodeId)
 
-	p.ihm.HandleReqestforOldSeq(rom)
+	p.ihm.HandleRequestForOldSeq(rom)
 
 	// send the block back
 	sb := message.SendOldMessage{
@@ -332,22 +332,22 @@ func (p *PbftConsensusNode) handleRequestOldSeq(content []byte) {
 	if err != nil {
 		log.Panic()
 	}
-	msg_send := message.MergeMessage(message.CSendOldRequest, sbByte)
-	networks.TcpDial(msg_send, rom.SenderNode.IPaddr)
-	p.pl.Plog.Printf("S%dN%d : send blocks\n", p.ShardID, p.NodeID)
+	msgSend := message.MergeMessage(message.CSendOldRequest, sbByte)
+	networks.TcpDial(msgSend, rom.SenderNode.IpAddr)
+	p.pl.Plog.Printf("S%dN%d : send blocks\n", p.ShardId, p.NodeId)
 }
 
 // node request blocks and receive blocks from the main node
-func (p *PbftConsensusNode) handleSendOldSeq(content []byte) {
+func (p *ConsensusNode) handleSendOldSeq(content []byte) {
 	som := new(message.SendOldMessage)
 	err := json.Unmarshal(content, som)
 	if err != nil {
 		log.Panic()
 	}
-	p.pl.Plog.Printf("S%dN%d : has received the SendOldMessage message\n", p.ShardID, p.NodeID)
+	p.pl.Plog.Printf("S%dN%d : has received the SendOldMessage message\n", p.ShardId, p.NodeId)
 
 	// implement interface for new consensus
-	p.ihm.HandleforSequentialRequest(som)
+	p.ihm.HandleForSequentialRequest(som)
 	beginSeq := som.SeqStartHeight
 	for idx, r := range som.OldRequest {
 		p.requestPool[string(getDigest(r))] = r
@@ -358,17 +358,17 @@ func (p *PbftConsensusNode) handleSendOldSeq(content []byte) {
 	p.sequenceID = som.SeqEndHeight + 1
 	if rDigest, ok1 := p.height2Digest[p.sequenceID]; ok1 {
 		if r, ok2 := p.requestPool[rDigest]; ok2 {
-			ppmsg := &message.PrePrepare{
+			ppMsg := &message.PrePrepare{
 				RequestMsg: r,
 				SeqID:      p.sequenceID,
 				Digest:     getDigest(r),
 			}
 			flag := false
-			flag = p.ihm.HandleinPrePrepare(ppmsg)
+			flag = p.ihm.HandleInPrePrepare(ppMsg)
 			if flag {
 				pre := message.Prepare{
-					Digest:     ppmsg.Digest,
-					SeqID:      ppmsg.SeqID,
+					Digest:     ppMsg.Digest,
+					SeqID:      ppMsg.SeqID,
 					SenderNode: p.RunningNode,
 				}
 				prepareByte, err := json.Marshal(pre)
@@ -376,9 +376,9 @@ func (p *PbftConsensusNode) handleSendOldSeq(content []byte) {
 					log.Panic()
 				}
 				// broadcast
-				msg_send := message.MergeMessage(message.CPrepare, prepareByte)
-				networks.Broadcast(p.RunningNode.IPaddr, p.getNeighborNodes(), msg_send)
-				p.pl.Plog.Printf("S%dN%d : has broadcast the prepare message \n", p.ShardID, p.NodeID)
+				msgSend := message.MergeMessage(message.CPrepare, prepareByte)
+				networks.Broadcast(p.RunningNode.IpAddr, p.getNeighborNodes(), msgSend)
+				p.pl.Plog.Printf("S%dN%d : has broadcast the prepare message \n", p.ShardId, p.NodeId)
 			}
 		}
 	}

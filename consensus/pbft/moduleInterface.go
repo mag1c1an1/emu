@@ -14,10 +14,10 @@ type ExtraOpInConsensus interface {
 	HandleInPrepare(*message.Prepare) bool
 	// HandleInCommit confirming
 	HandleInCommit(*message.Commit) bool
-	//// HandleRequestForOldSeq do for need
-	//HandleRequestForOldSeq(*message.RequestOldMessage) bool
-	//// HandleForSequentialRequest do for need
-	//HandleForSequentialRequest(*message.SendOldMessage) bool
+	// HandleRequestForOldSeq do for need
+	HandleRequestForOldSeq(*message.RequestOldMessage) bool
+	// HandleForSequentialRequest do for need
+	HandleForSequentialRequest(*message.SendOldMessage) bool
 }
 
 // OpInterShards Define operations among some PBFTs.

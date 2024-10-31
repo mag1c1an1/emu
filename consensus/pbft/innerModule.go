@@ -12,12 +12,12 @@ import (
 	"time"
 )
 
-type NormalExtraHandleMod struct {
+type NormalExtraInnerHandleMod struct {
 	pbftNode *ConsensusNode
 }
 
-func (nhm *NormalExtraHandleMod) HandleInPropose() (bool, *message.Request) {
-	block := nhm.pbftNode.CurChain.GenerateBlock(int32(nhm.pbftNode.NodeId))
+func (nhim *NormalExtraInnerHandleMod) HandleInPropose() (bool, *message.Request) {
+	block := nhim.pbftNode.CurChain.GenerateBlock(int32(nhim.pbftNode.NodeId))
 	r := &message.Request{
 		RequestType: message.BlockRequest,
 		ReqTime:     time.Now(),
@@ -27,38 +27,38 @@ func (nhm *NormalExtraHandleMod) HandleInPropose() (bool, *message.Request) {
 }
 
 // HandleInPrePrepare the DIY operation in preprepare
-func (nhm *NormalExtraHandleMod) HandleInPrePrepare(ppMsg *message.PrePrepare) bool {
-	if nhm.pbftNode.CurChain.IsValidBlock(core.DecodeB(ppMsg.RequestMsg.Msg.Content)) != nil {
-		nhm.pbftNode.pl.Plog.Printf("S%dN%d : not a valid block\n", nhm.pbftNode.ShardId, nhm.pbftNode.NodeId)
+func (nhim *NormalExtraInnerHandleMod) HandleInPrePrepare(ppMsg *message.PrePrepare) bool {
+	if nhim.pbftNode.CurChain.IsValidBlock(core.DecodeB(ppMsg.RequestMsg.Msg.Content)) != nil {
+		nhim.pbftNode.pl.Plog.Printf("S%dN%d : not a valid block\n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId)
 		return false
 	}
-	nhm.pbftNode.pl.Plog.Printf("S%dN%d : the pre-prepare message is correct, putting it into the RequestPool. \n", nhm.pbftNode.ShardId, nhm.pbftNode.NodeId)
-	nhm.pbftNode.requestPool[string(ppMsg.Digest)] = ppMsg.RequestMsg
+	nhim.pbftNode.pl.Plog.Printf("S%dN%d : the pre-prepare message is correct, putting it into the RequestPool. \n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId)
+	nhim.pbftNode.requestPool[string(ppMsg.Digest)] = ppMsg.RequestMsg
 	// merge to be a prepare message
 	return true
 }
 
 // HandleInPrepare the operation in prepare, and in pbft + tx relaying, this function does not need to do any.
-func (nhm *NormalExtraHandleMod) HandleInPrepare(pMsg *message.Prepare) bool {
+func (nhim *NormalExtraInnerHandleMod) HandleInPrepare(pMsg *message.Prepare) bool {
 	fmt.Println("No operations are performed in Extra handle mod")
 	return true
 }
 
 // HandleInCommit the operation in commit.
-func (nhm *NormalExtraHandleMod) HandleInCommit(cMsg *message.Commit) bool {
-	r := nhm.pbftNode.requestPool[string(cMsg.Digest)]
+func (nhim *NormalExtraInnerHandleMod) HandleInCommit(cMsg *message.Commit) bool {
+	r := nhim.pbftNode.requestPool[string(cMsg.Digest)]
 	// requestType ...
 	block := core.DecodeB(r.Msg.Content)
-	nhm.pbftNode.pl.Plog.Printf("S%dN%d : adding the block %d...now height = %d \n", nhm.pbftNode.ShardId, nhm.pbftNode.NodeId, block.Header.Number, nhm.pbftNode.CurChain.CurrentBlock.Header.Number)
-	nhm.pbftNode.CurChain.AddBlock(block)
-	nhm.pbftNode.pl.Plog.Printf("S%dN%d : added the block %d... \n", nhm.pbftNode.ShardId, nhm.pbftNode.NodeId, block.Header.Number)
-	nhm.pbftNode.CurChain.PrintBlockChain()
+	nhim.pbftNode.pl.Plog.Printf("S%dN%d : adding the block %d...now height = %d \n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId, block.Header.Number, nhim.pbftNode.CurChain.CurrentBlock.Header.Number)
+	nhim.pbftNode.CurChain.AddBlock(block)
+	nhim.pbftNode.pl.Plog.Printf("S%dN%d : added the block %d... \n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId, block.Header.Number)
+	nhim.pbftNode.CurChain.PrintBlockChain()
 
 	// now try to relay txs to other shards (for main nodes)
-	if nhm.pbftNode.NodeId == uint64(nhm.pbftNode.view.Load()) {
-		nhm.pbftNode.pl.Plog.Printf("S%dN%d : main node is trying to send relay txs at height = %d \n", nhm.pbftNode.ShardId, nhm.pbftNode.NodeId, block.Header.Number)
+	if nhim.pbftNode.NodeId == uint64(nhim.pbftNode.view.Load()) {
+		nhim.pbftNode.pl.Plog.Printf("S%dN%d : main node is trying to send relay txs at height = %d \n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId, block.Header.Number)
 		// generate relay pool and collect txs executed
-		nhm.pbftNode.CurChain.Txpool.RelayPool = make(map[uint64][]*core.Transaction)
+		nhim.pbftNode.CurChain.Txpool.RelayPool = make(map[uint64][]*core.Transaction)
 		// send txs executed in this block to the listener
 		// add more message to measure more metrics
 		bim := message.BlockInfoMsg{
@@ -66,7 +66,7 @@ func (nhm *NormalExtraHandleMod) HandleInCommit(cMsg *message.Commit) bool {
 			InnerShardTxs:   block.Body,
 			Epoch:           0,
 
-			SenderShardID: nhm.pbftNode.ShardId,
+			SenderShardID: nhim.pbftNode.ShardId,
 			ProposeTime:   r.ReqTime,
 			CommitTime:    time.Now(),
 		}
@@ -75,9 +75,9 @@ func (nhm *NormalExtraHandleMod) HandleInCommit(cMsg *message.Commit) bool {
 			log.Panic(err)
 		}
 		msgSend := message.MergeMessage(message.CBlockInfo, bByte)
-		go networks.TcpDial(msgSend, nhm.pbftNode.ipNodeTable[params.SupervisorShard][0])
-		nhm.pbftNode.pl.Plog.Printf("S%dN%d : sended excuted txs\n", nhm.pbftNode.ShardId, nhm.pbftNode.NodeId)
-		nhm.pbftNode.CurChain.Txpool.GetLocked()
+		go networks.TcpDial(msgSend, nhim.pbftNode.ipNodeTable[params.SupervisorShard][0])
+		nhim.pbftNode.pl.Plog.Printf("S%dN%d : sended excuted txs\n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId)
+		nhim.pbftNode.CurChain.Txpool.GetLocked()
 		metricName := []string{
 			"Block Height",
 			"EpochID of this block",
@@ -91,7 +91,7 @@ func (nhm *NormalExtraHandleMod) HandleInCommit(cMsg *message.Commit) bool {
 		metricVal := []string{
 			strconv.Itoa(int(block.Header.Number)),
 			strconv.Itoa(bim.Epoch),
-			strconv.Itoa(len(nhm.pbftNode.CurChain.Txpool.TxQueue)),
+			strconv.Itoa(len(nhim.pbftNode.CurChain.Txpool.TxQueue)),
 			strconv.Itoa(len(block.Body)),
 
 			strconv.FormatInt(bim.ProposeTime.UnixMilli(), 10),
@@ -99,31 +99,31 @@ func (nhm *NormalExtraHandleMod) HandleInCommit(cMsg *message.Commit) bool {
 
 			strconv.FormatInt(computeTCL(block.Body, bim.CommitTime), 10),
 		}
-		nhm.pbftNode.writeCsvLine(metricName, metricVal)
-		nhm.pbftNode.CurChain.Txpool.GetUnlocked()
+		nhim.pbftNode.writeCsvLine(metricName, metricVal)
+		nhim.pbftNode.CurChain.Txpool.GetUnlocked()
 	}
 	return true
 }
 
-//func (rphm *RawRelayPbftExtraHandleMod) HandleReqestforOldSeq(*message.RequestOldMessage) bool {
-//	fmt.Println("No operations are performed in Extra handle mod")
-//	return true
-//}
-//
-//// the operation for sequential requests
-//func (rphm *RawRelayPbftExtraHandleMod) HandleforSequentialRequest(som *message.SendOldMessage) bool {
-//	if int(som.SeqEndHeight-som.SeqStartHeight+1) != len(som.OldRequest) {
-//		rphm.pbftNode.pl.Plog.Printf("S%dN%d : the SendOldMessage message is not enough\n", rphm.pbftNode.ShardID, rphm.pbftNode.NodeID)
-//	} else { // add the block into the node pbft blockchain
-//		for height := som.SeqStartHeight; height <= som.SeqEndHeight; height++ {
-//			r := som.OldRequest[height-som.SeqStartHeight]
-//			if r.RequestType == message.BlockRequest {
-//				b := core.DecodeB(r.Msg.Content)
-//				rphm.pbftNode.CurChain.AddBlock(b)
-//			}
-//		}
-//		rphm.pbftNode.sequenceID = som.SeqEndHeight + 1
-//		rphm.pbftNode.CurChain.PrintBlockChain()
-//	}
-//	return true
-//}
+func (nhim *NormalExtraInnerHandleMod) HandleRequestForOldSeq(*message.RequestOldMessage) bool {
+	fmt.Println("No operations are performed in Extra handle mod")
+	return true
+}
+
+// HandleForSequentialRequest the operation for sequential requests
+func (nhim *NormalExtraInnerHandleMod) HandleForSequentialRequest(som *message.SendOldMessage) bool {
+	if int(som.SeqEndHeight-som.SeqStartHeight+1) != len(som.OldRequest) {
+		nhim.pbftNode.pl.Plog.Printf("S%dN%d : the SendOldMessage message is not enough\n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId)
+	} else { // add the block into the node pbft blockchain
+		for height := som.SeqStartHeight; height <= som.SeqEndHeight; height++ {
+			r := som.OldRequest[height-som.SeqStartHeight]
+			if r.RequestType == message.BlockRequest {
+				b := core.DecodeB(r.Msg.Content)
+				nhim.pbftNode.CurChain.AddBlock(b)
+			}
+		}
+		nhim.pbftNode.sequenceID = som.SeqEndHeight + 1
+		nhim.pbftNode.CurChain.PrintBlockChain()
+	}
+	return true
+}
