@@ -20,7 +20,7 @@ var (
 
 	PbftViewChangeTimeOut = 10000 // The view change threshold of pbft. If the process of PBFT is too slow, the view change mechanism will be triggered.
 
-	Block_Interval      = 5000   // The time interval for generating a new block
+	BlockInterval       = 5000   // The time interval for generating a new block
 	MaxBlockSize_global = 2000   // The maximum number of transactions a block contains
 	InjectSpeed         = 2000   // The speed of transaction injection
 	TotalDataSize       = 160000 // The total number of txs to be injected
@@ -29,15 +29,15 @@ var (
 	BrokerNum            = 10 // The # of Broker accounts used in Broker / CLPA_Broker.
 	RelayWithMerkleProof = 0  // When using a consensus about "Relay", nodes will send Tx Relay with proof if "RelayWithMerkleProof" = 1
 
-	ExpDataRootDir     = "expTest"                     // The root dir where the experimental data should locate.
-	DataWrite_path     = ExpDataRootDir + "/result/"   // Measurement data result output path
-	LogWrite_path      = ExpDataRootDir + "/log"       // Log output path
-	DatabaseWrite_path = ExpDataRootDir + "/database/" // database write path
+	ExpDataRootDir    = "expTest"                     // The root dir where the experimental data should locate.
+	DataWritePath     = ExpDataRootDir + "/result/"   // Measurement data result output path
+	LogWritePath      = ExpDataRootDir + "/log"       // Log output path
+	DatabaseWritePath = ExpDataRootDir + "/database/" // database write path
 
 	SupervisorAddr = "127.0.0.1:18800"        // Supervisor ip address
 	DatasetFile    = `./selectedTxs_300K.csv` // The raw BlockTransaction data path
 
-	ReconfigTimeGap = 50 // The time gap between epochs. This variable is only used in CLPA / CLPA_Broker now.
+	ReConfigTimeGap = 50 // The time gap between epochs. This variable is only used in CLPA / CLPA_Broker now.
 )
 
 // network layer
@@ -55,7 +55,7 @@ type globalConfig struct {
 
 	ExpDataRootDir string `json:"ExpDataRootDir"`
 
-	BlockInterval      int `json:"Block_Interval"`
+	BlockInterval      int `json:"BlockInterval"`
 	MaxBlockSizeGlobal int `json:"BlockSize"`
 	InjectSpeed        int `json:"InjectSpeed"`
 	TotalDataSize      int `json:"TotalDataSize"`
@@ -64,7 +64,7 @@ type globalConfig struct {
 	BrokerNum            int    `json:"BrokerNum"`
 	RelayWithMerkleProof int    `json:"RelayWithMerkleProof"`
 	DatasetFile          string `json:"DatasetFile"`
-	ReconfigTimeGap      int    `json:"ReconfigTimeGap"`
+	ReconfigTimeGap      int    `json:"ReConfigTimeGap"`
 
 	Delay       int `json:"Delay"`
 	JitterRange int `json:"JitterRange"`
@@ -94,11 +94,11 @@ func ReadConfigFile() {
 
 	// data file params
 	ExpDataRootDir = config.ExpDataRootDir
-	DataWrite_path = ExpDataRootDir + "/result/"
-	LogWrite_path = ExpDataRootDir + "/log"
-	DatabaseWrite_path = ExpDataRootDir + "/database/"
+	DataWritePath = ExpDataRootDir + "/result/"
+	LogWritePath = ExpDataRootDir + "/log"
+	DatabaseWritePath = ExpDataRootDir + "/database/"
 
-	Block_Interval = config.BlockInterval
+	BlockInterval = config.BlockInterval
 	MaxBlockSize_global = config.MaxBlockSizeGlobal
 
 	InjectSpeed = config.InjectSpeed
@@ -109,7 +109,7 @@ func ReadConfigFile() {
 	RelayWithMerkleProof = config.RelayWithMerkleProof
 	DatasetFile = config.DatasetFile
 
-	ReconfigTimeGap = config.ReconfigTimeGap
+	ReConfigTimeGap = config.ReconfigTimeGap
 
 	// network params
 	Delay = config.Delay

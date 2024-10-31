@@ -28,7 +28,7 @@ type BlockChain struct {
 	Txpool       *core.TxPool        // the transaction pool
 
 	pmLock       sync.RWMutex
-	PartitionMap map[string]uint64 // the partition map which is defined by some algorithm can help account parition
+	PartitionMap map[string]uint64 // the partition map which is defined by some algorithm can help account partition
 }
 
 // GetTxTreeRoot Get the transaction root, this root can be used to check the transactions
@@ -68,7 +68,7 @@ func (bc *BlockChain) GetPartitionMap(key string) uint64 {
 	return bc.PartitionMap[key]
 }
 
-// SendTx2Pool Send a transaction to the pool (need to decide which pool should be sended)
+// SendTx2Pool Send a transaction to the pool (need to decide which pool should be sent)
 func (bc *BlockChain) SendTx2Pool(txs []*core.Transaction) {
 	bc.Txpool.AddTxs2Pool(txs)
 }
@@ -92,14 +92,14 @@ func (bc *BlockChain) GetUpdateStatusTrie(txs []*core.Transaction) common.Hash {
 		// senderIn := false
 		if !tx.Relayed && (bc.GetPartitionMap(tx.Sender) == bc.ChainConfig.ShardID || tx.HasBroker) {
 			// senderIn = true
-			// fmt.Printf("the sender %s is in this shard %d, \n", tx.Sender, bc.ChainConfig.ShardID)
+			// fmt.Printf("the sender %s is in this shard %d, \n", tx.Sender, bc.ChainConfig.ShardId)
 			// modify local account state
 			sStateEnc, _ := st.Get([]byte(tx.Sender))
 			var sState *core.AccountState
 			if sStateEnc == nil {
 				// fmt.Println("missing account SENDER, now adding account")
 				ib := new(big.Int)
-				ib.Add(ib, params.Init_Balance)
+				ib.Add(ib, params.InitBalance)
 				sState = &core.AccountState{
 					Nonce:   uint64(i),
 					Balance: ib,
@@ -118,7 +118,7 @@ func (bc *BlockChain) GetUpdateStatusTrie(txs []*core.Transaction) common.Hash {
 		}
 		// recipientIn := false
 		if bc.GetPartitionMap(tx.Recipient) == bc.ChainConfig.ShardID || tx.HasBroker {
-			// fmt.Printf("the recipient %s is in this shard %d, \n", tx.Recipient, bc.ChainConfig.ShardID)
+			// fmt.Printf("the recipient %s is in this shard %d, \n", tx.Recipient, bc.ChainConfig.ShardId)
 			// recipientIn = true
 			// modify local state
 			rStateEnc, _ := st.Get([]byte(tx.Recipient))
@@ -126,7 +126,7 @@ func (bc *BlockChain) GetUpdateStatusTrie(txs []*core.Transaction) common.Hash {
 			if rStateEnc == nil {
 				// fmt.Println("missing account RECIPIENT, now adding account")
 				ib := new(big.Int)
-				ib.Add(ib, params.Init_Balance)
+				ib.Add(ib, params.InitBalance)
 				rState = &core.AccountState{
 					Nonce:   uint64(i),
 					Balance: ib,
@@ -171,6 +171,7 @@ func (bc *BlockChain) GenerateBlock(miner int32) *core.Block {
 	bh.StateRoot = rt.Bytes()
 	bh.TxRoot = GetTxTreeRoot(txs)
 	bh.Bloom = *GetBloomFilter(txs)
+	// TODO change this
 	bh.Miner = 0
 	b := core.NewBlock(bh, txs)
 
@@ -185,12 +186,12 @@ func (bc *BlockChain) NewGenesisBlock() *core.Block {
 		Number: 0,
 	}
 	// build a new trie database by db
-	triedb := trie.NewDatabaseWithConfig(bc.db, &trie.Config{
+	trieDB := trie.NewDatabaseWithConfig(bc.db, &trie.Config{
 		Cache:     0,
 		Preimages: true,
 	})
-	bc.trieDB = triedb
-	statusTrie := trie.NewEmpty(triedb)
+	bc.trieDB = trieDB
+	statusTrie := trie.NewEmpty(trieDB)
 	bh.StateRoot = statusTrie.Hash().Bytes()
 	bh.TxRoot = GetTxTreeRoot(body)
 	bh.Bloom = *GetBloomFilter(body)
@@ -239,7 +240,7 @@ func (bc *BlockChain) AddBlock(b *core.Block) {
 // the ChainConfig is pre-defined to identify the blockchain; the db is the status trie database in disk
 func NewBlockChain(cc *params.ChainConfig, db ethdb.Database) (*BlockChain, error) {
 	fmt.Println("Generating a new blockchain", db)
-	chainDBfp := params.DatabaseWrite_path + fmt.Sprintf("chainDB/S%d_N%d", cc.ShardID, cc.NodeID)
+	chainDBfp := params.DatabaseWritePath + fmt.Sprintf("chainDB/S%d_N%d", cc.ShardID, cc.NodeID)
 	bc := &BlockChain{
 		db:           db,
 		ChainConfig:  cc,
@@ -253,9 +254,9 @@ func NewBlockChain(cc *params.ChainConfig, db ethdb.Database) (*BlockChain, erro
 		// if the Storage bolt database cannot find the newest blockhash,
 		// it means the blockchain should be built in height = 0
 		if err.Error() == "cannot find the newest block hash" {
-			genisisBlock := bc.NewGenesisBlock()
-			bc.AddGenesisBlock(genisisBlock)
-			fmt.Println("New genisis block")
+			genesisBlock := bc.NewGenesisBlock()
+			bc.AddGenesisBlock(genesisBlock)
+			fmt.Println("New genesis block")
 			return bc, nil
 		}
 		log.Panic()
@@ -287,8 +288,8 @@ func NewBlockChain(cc *params.ChainConfig, db ethdb.Database) (*BlockChain, erro
 // IsValidBlock check a block is valid or not in this blockchain config
 func (bc *BlockChain) IsValidBlock(b *core.Block) error {
 	if string(b.Header.ParentBlockHash) != string(bc.CurrentBlock.Hash) {
-		fmt.Println("the parentblock hash is not equal to the current block hash")
-		return errors.New("the parentblock hash is not equal to the current block hash")
+		fmt.Println("the parent block hash is not equal to the current block hash")
+		return errors.New("the parent block hash is not equal to the current block hash")
 	} else if string(GetTxTreeRoot(b.Body)) != string(b.Header.TxRoot) {
 		fmt.Println("the transaction root is wrong")
 		return errors.New("the transaction root is wrong")
@@ -363,7 +364,7 @@ func (bc *BlockChain) FetchAccounts(addrs []string) []*core.AccountState {
 		var stateA *core.AccountState
 		if asEnc == nil {
 			ib := new(big.Int)
-			ib.Add(ib, params.Init_Balance)
+			ib.Add(ib, params.InitBalance)
 			stateA = &core.AccountState{
 				Nonce:   uint64(0),
 				Balance: ib,

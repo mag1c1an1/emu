@@ -9,13 +9,13 @@ import (
 
 func WriteMetricsToCSV(fileName string, colName []string, colVals [][]string) {
 	// Construct directory path
-	dirpath := params.DataWrite_path + "supervisor_measureOutput/"
-	if err := os.MkdirAll(dirpath, os.ModePerm); err != nil {
+	dirPath := params.DataWritePath + "supervisor_measureOutput/"
+	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
 		log.Panic(err)
 	}
 
 	// Construct target file path
-	targetPath := dirpath + fileName + ".csv"
+	targetPath := dirPath + fileName + ".csv"
 
 	// Open file, create if it does not exist
 	file, err := os.OpenFile(targetPath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)

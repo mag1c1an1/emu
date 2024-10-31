@@ -80,7 +80,7 @@ func (txpool *TxPool) GetLocked() {
 	txpool.lock.Lock()
 }
 
-// txpool get unlocked
+// GetUnlocked txpool get unlocked
 func (txpool *TxPool) GetUnlocked() {
 	txpool.lock.Unlock()
 }

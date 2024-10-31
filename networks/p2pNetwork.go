@@ -30,6 +30,7 @@ func InitNetworkTools() {
 		params.Delay = 0
 	}
 	if params.JitterRange < 0 {
+		// TODO: use this for what
 		params.JitterRange = 0
 	}
 	if params.Bandwidth < 0 {
@@ -105,7 +106,11 @@ func CloseAllConnInPool() {
 	defer connMaplock.Unlock()
 
 	for _, conn := range connectionPool {
-		conn.Close()
+		err := conn.Close()
+		if err != nil {
+			log.Panic(err)
+			return
+		}
 	}
 	connectionPool = make(map[string]net.Conn) // Reset the pool
 }

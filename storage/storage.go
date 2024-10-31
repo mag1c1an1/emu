@@ -19,7 +19,7 @@ type Storage struct {
 }
 
 func NewStorage(dbFilePath string, cc *params.ChainConfig) *Storage {
-	dir := params.DatabaseWrite_path + "chainDB"
+	dir := params.DatabaseWritePath + "chainDB"
 	errMkdir := os.MkdirAll(dir, os.ModePerm)
 	if errMkdir != nil {
 		log.Panic(errMkdir)

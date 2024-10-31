@@ -22,7 +22,7 @@ type BlockHeader struct {
 	Bloom           bitset.BitSet
 	Number          uint64
 	Time            time.Time
-	Miner           int32
+	Miner           int32 // this is useless for now
 }
 
 // Encode blockHeader for storing further
