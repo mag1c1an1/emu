@@ -127,8 +127,8 @@ func (d *Supervisor) SupervisorTxHandling() {
 		for _, measureMod := range d.testMeasureMods {
 			d.sl.Slog.Println(measureMod.OutputMetricName())
 			d.sl.Slog.Println(measureMod.Res())
-			println()
 		}
+		d.sl.Sync()
 	}
 	// send stop message
 	stopMsg := message.MergeMessage(message.CStop, []byte("this is a stop message~"))

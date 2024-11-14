@@ -88,6 +88,7 @@ type InjectTxs struct {
 
 // BlockInfoMsg data sent to the supervisor
 type BlockInfoMsg struct {
+	BlockID         string
 	BlockBodyLength int
 	InnerShardTxs   []*core.Transaction // txs which are innerShard
 	Epoch           int

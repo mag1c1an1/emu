@@ -1,4 +1,5 @@
 .idea/
 expTest/
 runner/target
-bin/*
+bin/runner
+bin/emu

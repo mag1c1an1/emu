@@ -62,6 +62,7 @@ func (nhim *NormalExtraInnerHandleMod) HandleInCommit(cMsg *message.Commit) bool
 		// send txs executed in this block to the listener
 		// add more message to measure more metrics
 		bim := message.BlockInfoMsg{
+			BlockID:         fmt.Sprintf("%v/%v", nhim.pbftNode.ShardID, block.Header.Number),
 			BlockBodyLength: len(block.Body),
 			InnerShardTxs:   block.Body,
 			Epoch:           0,

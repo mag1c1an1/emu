@@ -5,7 +5,7 @@ sv:
     go run main.go -c -S 1 -N 4
 
 gen NUM:
-    ./emu -g -f -S 1 -N {{NUM}}
+    ./bin/emu -g -f -S 1 -N {{NUM}}
 
 killall:
     killall -9 emu
@@ -21,7 +21,7 @@ ls:
 iptable NUM:
     python3 scripts/create_iptable.py {{NUM}}
 
-pre NUM: clean build
+pre NUM:build_runner clean build
     just iptable {{NUM}}
     just gen {{NUM}}
 

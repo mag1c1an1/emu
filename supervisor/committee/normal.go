@@ -130,5 +130,5 @@ func (ncm *NormalCommitteeModule) MsgSendingControl() {
 
 // HandleBlockInfo no operation here
 func (ncm *NormalCommitteeModule) HandleBlockInfo(b *message.BlockInfoMsg) {
-	ncm.sl.Slog.Printf("received from shard %d in epoch %d.\n", b.SenderShardID, b.Epoch)
+	ncm.sl.Slog.Printf("received %v from shard %d in epoch %d.\n", b.BlockID, b.SenderShardID, b.Epoch)
 }

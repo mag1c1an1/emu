@@ -9,6 +9,7 @@ import (
 
 type SupervisorLog struct {
 	Slog *log.Logger
+	f    *os.File
 }
 
 func NewSupervisorLog() *SupervisorLog {
@@ -26,5 +27,10 @@ func NewSupervisorLog() *SupervisorLog {
 	pl := log.New(io.MultiWriter(writer1, writer2), "Supervisor: ", log.Lshortfile|log.Ldate|log.Ltime)
 	return &SupervisorLog{
 		Slog: pl,
+		f:    writer2,
 	}
+}
+
+func (s *SupervisorLog) Sync() {
+	s.f.Sync()
 }
