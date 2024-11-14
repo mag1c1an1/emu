@@ -92,7 +92,7 @@ func (bc *BlockChain) GetUpdateStatusTrie(txs []*core.Transaction) common.Hash {
 		// senderIn := false
 		if !tx.Relayed && (bc.GetPartitionMap(tx.Sender) == bc.ChainConfig.ShardID || tx.HasBroker) {
 			// senderIn = true
-			// fmt.Printf("the sender %s is in this shard %d, \n", tx.Sender, bc.ChainConfig.ShardId)
+			// fmt.Printf("the sender %s is in this shard %d, \n", tx.Sender, bc.ChainConfig.ShardID)
 			// modify local account state
 			sStateEnc, _ := st.Get([]byte(tx.Sender))
 			var sState *core.AccountState
@@ -118,7 +118,7 @@ func (bc *BlockChain) GetUpdateStatusTrie(txs []*core.Transaction) common.Hash {
 		}
 		// recipientIn := false
 		if bc.GetPartitionMap(tx.Recipient) == bc.ChainConfig.ShardID || tx.HasBroker {
-			// fmt.Printf("the recipient %s is in this shard %d, \n", tx.Recipient, bc.ChainConfig.ShardId)
+			// fmt.Printf("the recipient %s is in this shard %d, \n", tx.Recipient, bc.ChainConfig.ShardID)
 			// recipientIn = true
 			// modify local state
 			rStateEnc, _ := st.Get([]byte(tx.Recipient))

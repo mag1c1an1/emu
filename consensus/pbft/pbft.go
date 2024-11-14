@@ -22,8 +22,8 @@ import (
 type ConsensusNode struct {
 	// the local config about pbft
 	RunningNode *shard.Node // the node information
-	ShardId     uint64      // denote the ID of the shard (or pbft), only one pbft consensus in a shard
-	NodeId      uint64      // denote the ID of the node in the pbft (shard)
+	ShardID     uint64      // denote the ID of the shard (or pbft), only one pbft consensus in a shard
+	NodeID      uint64      // denote the ID of the node in the pbft (shard)
 
 	// the data structure for blockchain
 	CurChain *chain.BlockChain // all node in the shard maintain the same blockchain
@@ -83,8 +83,8 @@ func NewPbftNode(shardID, nodeID uint64, pcc *params.ChainConfig, messageHandleT
 	p := new(ConsensusNode)
 	p.ipNodeTable = params.IpMapNodeTable
 	p.nodeNums = pcc.NodesPerShard
-	p.ShardId = shardID
-	p.NodeId = nodeID
+	p.ShardID = shardID
+	p.NodeID = nodeID
 	p.pbftChainConfig = pcc
 	fp := params.DatabaseWritePath + "mptDB/ldb/s" + strconv.FormatUint(shardID, 10) + "/n" + strconv.FormatUint(nodeID, 10)
 	var err error
@@ -98,8 +98,8 @@ func NewPbftNode(shardID, nodeID uint64, pcc *params.ChainConfig, messageHandleT
 	}
 
 	p.RunningNode = &shard.Node{
-		NodeId:  nodeID,
-		ShardId: shardID,
+		NodeID:  nodeID,
+		ShardID: shardID,
 		IpAddr:  p.ipNodeTable[shardID][nodeID],
 	}
 

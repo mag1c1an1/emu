@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"emu/core"
 	"emu/message"
-	"emu/networks"
 	"emu/params"
 	"emu/shard"
 	"encoding/csv"
@@ -35,7 +34,7 @@ func (p *ConsensusNode) set2DMap(isPrePareConfirm bool, key string, val *shard.N
 // get neighbor nodes in a shard
 func (p *ConsensusNode) getNeighborNodes() []string {
 	receiverNodes := make([]string, 0)
-	for _, ip := range p.ipNodeTable[p.ShardId] {
+	for _, ip := range p.ipNodeTable[p.ShardID] {
 		receiverNodes = append(receiverNodes, ip)
 	}
 	return receiverNodes
@@ -44,7 +43,7 @@ func (p *ConsensusNode) getNeighborNodes() []string {
 // get node ips of shard id=shardID
 func (p *ConsensusNode) getNodeIpsWithinShard(shardID uint64) []string {
 	receiverNodes := make([]string, 0)
-	for _, ip := range p.ip_nodeTable[shardID] {
+	for _, ip := range p.ipNodeTable[shardID] {
 		receiverNodes = append(receiverNodes, ip)
 	}
 	return receiverNodes
@@ -59,7 +58,7 @@ func (p *ConsensusNode) writeCsvLine(metricName []string, metricVal []string) {
 	}
 
 	// Construct target file path
-	targetPath := fmt.Sprintf("%s/Shard%d%d.csv", dirPath, p.ShardId, p.pbftChainConfig.ShardNums)
+	targetPath := fmt.Sprintf("%s/Shard%d%d.csv", dirPath, p.ShardID, p.pbftChainConfig.ShardNums)
 
 	// Open file, create if it does not exist
 	file, err := os.OpenFile(targetPath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
@@ -114,67 +113,67 @@ func computeTCL(txs []*core.Transaction, commitTS time.Time) int64 {
 	return ret
 }
 
-// help to send Relay message to other shards.
-func (p *ConsensusNode) RelayMsgSend() {
-	if params.RelayWithMerkleProof != 0 {
-		log.Panicf("Parameter Error: RelayWithMerkleProof should be 0, but RelayWithMerkleProof=%d", params.RelayWithMerkleProof)
-	}
+//// help to send Relay message to other shards.
+//func (p *ConsensusNode) RelayMsgSend() {
+//	if params.RelayWithMerkleProof != 0 {
+//		log.Panicf("Parameter Error: RelayWithMerkleProof should be 0, but RelayWithMerkleProof=%d", params.RelayWithMerkleProof)
+//	}
+//
+//	for sid := uint64(0); sid < p.pbftChainConfig.ShardNums; sid++ {
+//		if sid == p.ShardID {
+//			continue
+//		}
+//		relay := message.Relay{
+//			Txs:           p.CurChain.Txpool.RelayPool[sid],
+//			SenderShardID: p.ShardID,
+//			SenderSeq:     p.sequenceID,
+//		}
+//		rByte, err := json.Marshal(relay)
+//		if err != nil {
+//			log.Panic()
+//		}
+//		msg_send := message.MergeMessage(message.CRelay, rByte)
+//		go networks.TcpDial(msg_send, p.ip_nodeTable[sid][0])
+//		p.pl.Plog.Printf("S%dN%d : sended relay txs to %d\n", p.ShardID, p.NodeID, sid)
+//	}
+//	p.CurChain.Txpool.ClearRelayPool()
+//}
+//
+//// help to send RelayWithProof message to other shards.
+//func (p *PbftConsensusNode) RelayWithProofSend(block *core.Block) {
+//	if params.RelayWithMerkleProof != 1 {
+//		log.Panicf("Parameter Error: RelayWithMerkleProof should be 1, but RelayWithMerkleProof=%d", params.RelayWithMerkleProof)
+//	}
+//	for sid := uint64(0); sid < p.pbftChainConfig.ShardNums; sid++ {
+//		if sid == p.ShardID {
+//			continue
+//		}
+//
+//		txHashes := make([][]byte, len(p.CurChain.Txpool.RelayPool[sid]))
+//		for i, tx := range p.CurChain.Txpool.RelayPool[sid] {
+//			txHashes[i] = tx.TxHash[:]
+//		}
+//		txProofs := chain.TxProofBatchGenerateOnBlock(txHashes, block)
+//
+//		rwp := message.RelayWithProof{
+//			Txs:           p.CurChain.Txpool.RelayPool[sid],
+//			TxProofs:      txProofs,
+//			SenderShardID: p.ShardID,
+//			SenderSeq:     p.sequenceID,
+//		}
+//		rByte, err := json.Marshal(rwp)
+//		if err != nil {
+//			log.Panic()
+//		}
+//		msg_send := message.MergeMessage(message.CRelayWithProof, rByte)
+//
+//		go networks.TcpDial(msg_send, p.ip_nodeTable[sid][0])
+//		p.pl.Plog.Printf("S%dN%d : sended relay txs & proofs to %d\n", p.ShardID, p.NodeID, sid)
+//	}
+//	p.CurChain.Txpool.ClearRelayPool()
+//}
 
-	for sid := uint64(0); sid < p.pbftChainConfig.ShardNums; sid++ {
-		if sid == p.ShardId {
-			continue
-		}
-		relay := message.Relay{
-			Txs:           p.CurChain.Txpool.RelayPool[sid],
-			SenderShardID: p.ShardId,
-			SenderSeq:     p.sequenceID,
-		}
-		rByte, err := json.Marshal(relay)
-		if err != nil {
-			log.Panic()
-		}
-		msg_send := message.MergeMessage(message.CRelay, rByte)
-		go networks.TcpDial(msg_send, p.ip_nodeTable[sid][0])
-		p.pl.Plog.Printf("S%dN%d : sended relay txs to %d\n", p.ShardId, p.NodeId, sid)
-	}
-	p.CurChain.Txpool.ClearRelayPool()
-}
-
-// help to send RelayWithProof message to other shards.
-func (p *PbftConsensusNode) RelayWithProofSend(block *core.Block) {
-	if params.RelayWithMerkleProof != 1 {
-		log.Panicf("Parameter Error: RelayWithMerkleProof should be 1, but RelayWithMerkleProof=%d", params.RelayWithMerkleProof)
-	}
-	for sid := uint64(0); sid < p.pbftChainConfig.ShardNums; sid++ {
-		if sid == p.ShardID {
-			continue
-		}
-
-		txHashes := make([][]byte, len(p.CurChain.Txpool.RelayPool[sid]))
-		for i, tx := range p.CurChain.Txpool.RelayPool[sid] {
-			txHashes[i] = tx.TxHash[:]
-		}
-		txProofs := chain.TxProofBatchGenerateOnBlock(txHashes, block)
-
-		rwp := message.RelayWithProof{
-			Txs:           p.CurChain.Txpool.RelayPool[sid],
-			TxProofs:      txProofs,
-			SenderShardID: p.ShardID,
-			SenderSeq:     p.sequenceID,
-		}
-		rByte, err := json.Marshal(rwp)
-		if err != nil {
-			log.Panic()
-		}
-		msg_send := message.MergeMessage(message.CRelayWithProof, rByte)
-
-		go networks.TcpDial(msg_send, p.ip_nodeTable[sid][0])
-		p.pl.Plog.Printf("S%dN%d : sended relay txs & proofs to %d\n", p.ShardID, p.NodeID, sid)
-	}
-	p.CurChain.Txpool.ClearRelayPool()
-}
-
-// delete the txs in blocks. This list should be locked before calling this func.
+// DeleteElementsInList delete the txs in blocks. This list should be locked before calling this func.
 func DeleteElementsInList(list []*core.Transaction, elements []*core.Transaction) []*core.Transaction {
 	elementHashMap := make(map[string]bool)
 	for _, element := range elements {

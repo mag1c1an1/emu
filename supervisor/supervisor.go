@@ -52,36 +52,41 @@ func (d *Supervisor) NewSupervisor(ip string, pcc *params.ChainConfig, committee
 	d.Ss = signal.NewStopSignal(3 * int(pcc.ShardNums))
 
 	switch committeeMethod {
-	case "CLPA_Broker":
-		d.comMod = committee.NewCLPACommitteeMod_Broker(d.Ip_nodeTable, d.Ss, d.sl, params.DatasetFile, params.TotalDataSize, params.TxBatchSize, params.ReConfigTimeGap)
-	case "CLPA":
-		d.comMod = committee.NewCLPACommitteeModule(d.Ip_nodeTable, d.Ss, d.sl, params.DatasetFile, params.TotalDataSize, params.TxBatchSize, params.ReConfigTimeGap)
-	case "Broker":
-		d.comMod = committee.NewBrokerCommitteeMod(d.Ip_nodeTable, d.Ss, d.sl, params.DatasetFile, params.TotalDataSize, params.TxBatchSize)
+	//case "CLPA_Broker":
+	//	d.comMod = committee.NewCLPACommitteeMod_Broker(d.Ip_nodeTable, d.Ss, d.sl, params.DatasetFile, params.TotalDataSize, params.TxBatchSize, params.ReConfigTimeGap)
+	//case "CLPA":
+	//	d.comMod = committee.NewCLPACommitteeModule(d.Ip_nodeTable, d.Ss, d.sl, params.DatasetFile, params.TotalDataSize, params.TxBatchSize, params.ReConfigTimeGap)
+	//case "Broker":
+	//	d.comMod = committee.NewBrokerCommitteeMod(d.Ip_nodeTable, d.Ss, d.sl, params.DatasetFile, params.TotalDataSize, params.TxBatchSize)
+	//default:
+	//	d.comMod = committee.NewNormalCommitteeModule(d.Ip_nodeTable, d.Ss, d.sl, params.DatasetFile, params.TotalDataSize, params.TxBatchSize)
 	default:
-		d.comMod = committee.NewRelayCommitteeModule(d.Ip_nodeTable, d.Ss, d.sl, params.DatasetFile, params.TotalDataSize, params.TxBatchSize)
+		d.comMod = committee.NewNormalCommitteeModule(d.IpNodeTable, d.Ss, d.sl, params.DatasetFile, params.TotalDataSize, params.TxBatchSize)
 	}
 
 	d.testMeasureMods = make([]measure.MeasureModule, 0)
 	for _, mModName := range measureModNames {
 		switch mModName {
-		case "TPS_Relay":
-			d.testMeasureMods = append(d.testMeasureMods, measure.NewTestModule_avgTPS_Relay())
-		case "TPS_Broker":
-			d.testMeasureMods = append(d.testMeasureMods, measure.NewTestModule_avgTPS_Broker())
-		case "TCL_Relay":
-			d.testMeasureMods = append(d.testMeasureMods, measure.NewTestModule_TCL_Relay())
-		case "TCL_Broker":
-			d.testMeasureMods = append(d.testMeasureMods, measure.NewTestModule_TCL_Broker())
-		case "CrossTxRate_Relay":
-			d.testMeasureMods = append(d.testMeasureMods, measure.NewTestCrossTxRate_Relay())
-		case "CrossTxRate_Broker":
-			d.testMeasureMods = append(d.testMeasureMods, measure.NewTestCrossTxRate_Broker())
-		case "TxNumberCount_Relay":
-			d.testMeasureMods = append(d.testMeasureMods, measure.NewTestTxNumCount_Relay())
-		case "TxNumberCount_Broker":
-			d.testMeasureMods = append(d.testMeasureMods, measure.NewTestTxNumCount_Broker())
-		case "Tx_Details":
+		case "TPSNormal":
+			d.testMeasureMods = append(d.testMeasureMods, measure.NewAvgTPSNormal())
+
+			/*	case "TPS_Relay":
+					d.testMeasureMods = append(d.testMeasureMods, measure.NewTestModule_avgTPS_Relay())
+				case "TPS_Broker":
+					d.testMeasureMods = append(d.testMeasureMods, measure.NewTestModule_avgTPS_Broker())
+				case "TCL_Relay":
+					d.testMeasureMods = append(d.testMeasureMods, measure.NewTCLNormal())
+				case "TCL_Broker":
+					d.testMeasureMods = append(d.testMeasureMods, measure.NewTestModule_TCL_Broker())
+				case "CrossTxRate_Relay":
+					d.testMeasureMods = append(d.testMeasureMods, measure.NewTestCrossTxRate_Relay())
+				case "CrossTxRate_Broker":
+					d.testMeasureMods = append(d.testMeasureMods, measure.NewTestCrossTxRate_Broker())
+				case "TxNumberCount_Relay":
+					d.testMeasureMods = append(d.testMeasureMods, measure.NewTestTxNumCount_Relay())
+				case "TxNumberCount_Broker":
+					d.testMeasureMods = append(d.testMeasureMods, measure.NewTestTxNumCount_Broker())*/
+		case "TxDetails":
 			d.testMeasureMods = append(d.testMeasureMods, measure.NewTestTxDetail())
 		default:
 		}

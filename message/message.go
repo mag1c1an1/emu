@@ -105,7 +105,7 @@ type BlockInfoMsg struct {
 	Broker2Txs []*core.Transaction // cross transactions at second time by broker
 }
 
-type SeqIdInfo struct {
+type SeqIDInfo struct {
 	SenderShardID uint64
 	SenderSeq     uint64
 }

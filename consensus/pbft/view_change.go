@@ -9,7 +9,7 @@ import (
 )
 
 type ViewChangeData struct {
-	NextView, SeqId int
+	NextView, SeqID int
 }
 
 // propose a view change request
@@ -23,7 +23,7 @@ func (p *ConsensusNode) viewChangePropose() {
 		CurView:  int(p.view.Load()),
 		NextView: int(p.view.Load()+1) % int(p.nodeNums),
 		SeqID:    int(p.sequenceID),
-		FromNode: p.NodeId,
+		FromNode: p.NodeID,
 	}
 	// marshal and broadcast
 	vcByte, err := json.Marshal(vcMsg)
@@ -58,7 +58,7 @@ func (p *ConsensusNode) handleViewChangeMsg(content []byte) {
 			CurView:  int(p.view.Load()),
 			NextView: int(p.view.Load()+1) % int(p.nodeNums),
 			NewSeqID: int(p.sequenceID),
-			FromNode: p.NodeId,
+			FromNode: p.NodeID,
 		}
 		nvByte, err := json.Marshal(nvMsg)
 		if err != nil {

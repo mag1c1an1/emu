@@ -17,7 +17,7 @@ type NormalExtraInnerHandleMod struct {
 }
 
 func (nhim *NormalExtraInnerHandleMod) HandleInPropose() (bool, *message.Request) {
-	block := nhim.pbftNode.CurChain.GenerateBlock(int32(nhim.pbftNode.NodeId))
+	block := nhim.pbftNode.CurChain.GenerateBlock(int32(nhim.pbftNode.NodeID))
 	r := &message.Request{
 		RequestType: message.BlockRequest,
 		ReqTime:     time.Now(),
@@ -29,10 +29,10 @@ func (nhim *NormalExtraInnerHandleMod) HandleInPropose() (bool, *message.Request
 // HandleInPrePrepare the DIY operation in preprepare
 func (nhim *NormalExtraInnerHandleMod) HandleInPrePrepare(ppMsg *message.PrePrepare) bool {
 	if nhim.pbftNode.CurChain.IsValidBlock(core.DecodeB(ppMsg.RequestMsg.Msg.Content)) != nil {
-		nhim.pbftNode.pl.Plog.Printf("S%dN%d : not a valid block\n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId)
+		nhim.pbftNode.pl.Plog.Printf("S%dN%d : not a valid block\n", nhim.pbftNode.ShardID, nhim.pbftNode.NodeID)
 		return false
 	}
-	nhim.pbftNode.pl.Plog.Printf("S%dN%d : the pre-prepare message is correct, putting it into the RequestPool. \n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId)
+	nhim.pbftNode.pl.Plog.Printf("S%dN%d : the pre-prepare message is correct, putting it into the RequestPool. \n", nhim.pbftNode.ShardID, nhim.pbftNode.NodeID)
 	nhim.pbftNode.requestPool[string(ppMsg.Digest)] = ppMsg.RequestMsg
 	// merge to be a prepare message
 	return true
@@ -49,14 +49,14 @@ func (nhim *NormalExtraInnerHandleMod) HandleInCommit(cMsg *message.Commit) bool
 	r := nhim.pbftNode.requestPool[string(cMsg.Digest)]
 	// requestType ...
 	block := core.DecodeB(r.Msg.Content)
-	nhim.pbftNode.pl.Plog.Printf("S%dN%d : adding the block %d...now height = %d \n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId, block.Header.Number, nhim.pbftNode.CurChain.CurrentBlock.Header.Number)
+	nhim.pbftNode.pl.Plog.Printf("S%dN%d : adding the block %d...now height = %d \n", nhim.pbftNode.ShardID, nhim.pbftNode.NodeID, block.Header.Number, nhim.pbftNode.CurChain.CurrentBlock.Header.Number)
 	nhim.pbftNode.CurChain.AddBlock(block)
-	nhim.pbftNode.pl.Plog.Printf("S%dN%d : added the block %d... \n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId, block.Header.Number)
+	nhim.pbftNode.pl.Plog.Printf("S%dN%d : added the block %d... \n", nhim.pbftNode.ShardID, nhim.pbftNode.NodeID, block.Header.Number)
 	nhim.pbftNode.CurChain.PrintBlockChain()
 
 	// now try to relay txs to other shards (for main nodes)
-	if nhim.pbftNode.NodeId == uint64(nhim.pbftNode.view.Load()) {
-		nhim.pbftNode.pl.Plog.Printf("S%dN%d : main node is trying to send relay txs at height = %d \n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId, block.Header.Number)
+	if nhim.pbftNode.NodeID == uint64(nhim.pbftNode.view.Load()) {
+		nhim.pbftNode.pl.Plog.Printf("S%dN%d : main node is trying to send relay txs at height = %d \n", nhim.pbftNode.ShardID, nhim.pbftNode.NodeID, block.Header.Number)
 		// generate relay pool and collect txs executed
 		nhim.pbftNode.CurChain.Txpool.RelayPool = make(map[uint64][]*core.Transaction)
 		// send txs executed in this block to the listener
@@ -66,7 +66,7 @@ func (nhim *NormalExtraInnerHandleMod) HandleInCommit(cMsg *message.Commit) bool
 			InnerShardTxs:   block.Body,
 			Epoch:           0,
 
-			SenderShardID: nhim.pbftNode.ShardId,
+			SenderShardID: nhim.pbftNode.ShardID,
 			ProposeTime:   r.ReqTime,
 			CommitTime:    time.Now(),
 		}
@@ -76,7 +76,7 @@ func (nhim *NormalExtraInnerHandleMod) HandleInCommit(cMsg *message.Commit) bool
 		}
 		msgSend := message.MergeMessage(message.CBlockInfo, bByte)
 		go networks.TcpDial(msgSend, nhim.pbftNode.ipNodeTable[params.SupervisorShard][0])
-		nhim.pbftNode.pl.Plog.Printf("S%dN%d : sended excuted txs\n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId)
+		nhim.pbftNode.pl.Plog.Printf("S%dN%d : sended excuted txs\n", nhim.pbftNode.ShardID, nhim.pbftNode.NodeID)
 		nhim.pbftNode.CurChain.Txpool.GetLocked()
 		metricName := []string{
 			"Block Height",
@@ -113,7 +113,7 @@ func (nhim *NormalExtraInnerHandleMod) HandleRequestForOldSeq(*message.RequestOl
 // HandleForSequentialRequest the operation for sequential requests
 func (nhim *NormalExtraInnerHandleMod) HandleForSequentialRequest(som *message.SendOldMessage) bool {
 	if int(som.SeqEndHeight-som.SeqStartHeight+1) != len(som.OldRequest) {
-		nhim.pbftNode.pl.Plog.Printf("S%dN%d : the SendOldMessage message is not enough\n", nhim.pbftNode.ShardId, nhim.pbftNode.NodeId)
+		nhim.pbftNode.pl.Plog.Printf("S%dN%d : the SendOldMessage message is not enough\n", nhim.pbftNode.ShardID, nhim.pbftNode.NodeID)
 	} else { // add the block into the node pbft blockchain
 		for height := som.SeqStartHeight; height <= som.SeqEndHeight; height++ {
 			r := som.OldRequest[height-som.SeqStartHeight]

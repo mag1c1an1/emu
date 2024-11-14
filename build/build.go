@@ -37,7 +37,7 @@ func initConfig(nid, nnm, sid, snm uint64) *params.ChainConfig {
 		ShardID:       sid,
 		NodesPerShard: uint64(params.NodesInShard),
 		ShardNums:     snm,
-		BlockSize:     uint64(params.MaxBlockSize_global),
+		BlockSize:     uint64(params.MaxBlockSizeGlobal),
 		BlockInterval: uint64(params.BlockInterval),
 		InjectSpeed:   uint64(params.InjectSpeed),
 	}
@@ -47,12 +47,17 @@ func initConfig(nid, nnm, sid, snm uint64) *params.ChainConfig {
 func BuildSupervisor(nnm, snm uint64) {
 	methodID := params.ConsensusMethod
 	var measureMod []string
-	if methodID == 0 || methodID == 2 {
-		measureMod = params.MeasureBrokerMod
-	} else {
+
+	switch methodID {
+	case 0, 2:
 		measureMod = params.MeasureRelayMod
+	case 4:
+		measureMod = params.MeasureNormalMod
+	default:
+		measureMod = params.MeasureBrokerMod
 	}
-	measureMod = append(measureMod, "Tx_Details")
+
+	measureMod = append(measureMod, "TxDetails")
 
 	lsn := new(supervisor.Supervisor)
 	lsn.NewSupervisor(params.SupervisorAddr, initConfig(123, nnm, 123, snm), params.CommitteeMethod[methodID], measureMod...)

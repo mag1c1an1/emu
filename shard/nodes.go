@@ -3,15 +3,15 @@ package shard
 import "fmt"
 
 type Node struct {
-	NodeId  uint64
-	ShardId uint64
+	NodeID  uint64
+	ShardID uint64
 	IpAddr  string
 }
 
 func (n *Node) PrintNode() {
 	v := []interface{}{
-		n.NodeId,
-		n.ShardId,
+		n.NodeID,
+		n.ShardID,
 		n.IpAddr,
 	}
 	fmt.Printf("%v\n", v)

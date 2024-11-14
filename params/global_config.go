@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	// The following parameters can be set in main.go.
+	// NodesInShard The following parameters can be set in main.go.
 	// default values:
-	NodesInShard = 4 // \# of Nodes in a shard.
-	ShardNum     = 4 // \# of shards.
+	NodesInShard = 4 // # of Nodes in a shard.
+	ShardNum     = 1 // # of shards.
 )
 
 // consensus layer & output file path
@@ -20,11 +20,11 @@ var (
 
 	PbftViewChangeTimeOut = 10000 // The view change threshold of pbft. If the process of PBFT is too slow, the view change mechanism will be triggered.
 
-	BlockInterval       = 5000   // The time interval for generating a new block
-	MaxBlockSize_global = 2000   // The maximum number of transactions a block contains
-	InjectSpeed         = 2000   // The speed of transaction injection
-	TotalDataSize       = 160000 // The total number of txs to be injected
-	TxBatchSize         = 16000  // The supervisor read a batch of txs then send them. The size of a batch is 'TxBatchSize'
+	BlockInterval      = 5000   // The time interval for generating a new block
+	MaxBlockSizeGlobal = 2000   // The maximum number of transactions a block contains
+	InjectSpeed        = 2000   // The speed of transaction injection
+	TotalDataSize      = 160000 // The total number of txs to be injected
+	TxBatchSize        = 16000  // The supervisor read a batch of txs then send them. The size of a batch is 'TxBatchSize'
 
 	BrokerNum            = 10 // The # of Broker accounts used in Broker / CLPA_Broker.
 	RelayWithMerkleProof = 0  // When using a consensus about "Relay", nodes will send Tx Relay with proof if "RelayWithMerkleProof" = 1
@@ -64,7 +64,7 @@ type globalConfig struct {
 	BrokerNum            int    `json:"BrokerNum"`
 	RelayWithMerkleProof int    `json:"RelayWithMerkleProof"`
 	DatasetFile          string `json:"DatasetFile"`
-	ReconfigTimeGap      int    `json:"ReConfigTimeGap"`
+	ReConfigTimeGap      int    `json:"ReConfigTimeGap"`
 
 	Delay       int `json:"Delay"`
 	JitterRange int `json:"JitterRange"`
@@ -84,7 +84,7 @@ func ReadConfigFile() {
 	}
 
 	// output configurations
-	fmt.Printf("Config: %+v\n", config)
+	fmt.Printf("Config: %#v\n", config)
 
 	// set configurations to params
 	// consensus params
@@ -99,7 +99,7 @@ func ReadConfigFile() {
 	DatabaseWritePath = ExpDataRootDir + "/database/"
 
 	BlockInterval = config.BlockInterval
-	MaxBlockSize_global = config.MaxBlockSizeGlobal
+	MaxBlockSizeGlobal = config.MaxBlockSizeGlobal
 
 	InjectSpeed = config.InjectSpeed
 	TotalDataSize = config.TotalDataSize
@@ -109,7 +109,7 @@ func ReadConfigFile() {
 	RelayWithMerkleProof = config.RelayWithMerkleProof
 	DatasetFile = config.DatasetFile
 
-	ReConfigTimeGap = config.ReconfigTimeGap
+	ReConfigTimeGap = config.ReConfigTimeGap
 
 	// network params
 	Delay = config.Delay

@@ -3,6 +3,7 @@ package networks
 import (
 	"bytes"
 	"emu/params"
+	"errors"
 	"io"
 	"log"
 	"net"
@@ -14,7 +15,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-var connMaplock sync.Mutex
+var connMapLock sync.Mutex
 var connectionPool = make(map[string]net.Conn, 0)
 
 // network params.
@@ -54,8 +55,8 @@ func TcpDial(context []byte, addr string) {
 		}
 		time.Sleep(time.Millisecond * time.Duration(thisDelay))
 
-		connMaplock.Lock()
-		defer connMaplock.Unlock()
+		connMapLock.Lock()
+		defer connMapLock.Unlock()
 
 		var err error
 		var conn net.Conn // Define conn here
@@ -102,8 +103,8 @@ func Broadcast(sender string, receivers []string, msg []byte) {
 
 // CloseAllConnInPool closes all connections in the connection pool.
 func CloseAllConnInPool() {
-	connMaplock.Lock()
-	defer connMaplock.Unlock()
+	connMapLock.Lock()
+	defer connMapLock.Unlock()
 
 	for _, conn := range connectionPool {
 		err := conn.Close()
@@ -120,7 +121,7 @@ func ReadFromConn(addr string) {
 	conn := connectionPool[addr]
 
 	// new a conn reader
-	connReader := NewConnReader(conn, rateLimiterDownload)
+	connReader := newConnReader(conn, rateLimiterDownload)
 
 	buffer := make([]byte, 1024)
 	var messageBuffer bytes.Buffer
@@ -140,7 +141,7 @@ func ReadFromConn(addr string) {
 		// handle the full message
 		for {
 			message, err := readMessage(&messageBuffer)
-			if err == io.ErrShortBuffer {
+			if errors.Is(err, io.ErrShortBuffer) {
 				// continue to load if buffer is short
 				break
 			} else if err == nil {
