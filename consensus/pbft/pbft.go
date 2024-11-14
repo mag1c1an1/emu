@@ -209,7 +209,7 @@ func (p *ConsensusNode) TcpListen() {
 	}
 }
 func (p *ConsensusNode) WaitToStop() {
-	p.pl.Plog.Println("handling stop message")
+	p.pl.PLog.Println("handling stop message")
 	p.stopSignal.Store(true)
 	networks.CloseAllConnInPool()
 	err := p.tcpLn.Close()
@@ -217,7 +217,7 @@ func (p *ConsensusNode) WaitToStop() {
 		log.Panic(err)
 	}
 	p.closePbft()
-	p.pl.Plog.Println("handled stop message in TCPListen Routine")
+	p.pl.PLog.Println("handled stop message in TCPListen Routine")
 	p.pStop <- 1
 
 }

@@ -124,6 +124,11 @@ func (d *Supervisor) SupervisorTxHandling() {
 	// TxHandling is end
 	for !d.Ss.GapEnough() { // wait all txs to be handled
 		time.Sleep(time.Second)
+		for _, measureMod := range d.testMeasureMods {
+			d.sl.Slog.Println(measureMod.OutputMetricName())
+			d.sl.Slog.Println(measureMod.Res())
+			println()
+		}
 	}
 	// send stop message
 	stopMsg := message.MergeMessage(message.CStop, []byte("this is a stop message~"))

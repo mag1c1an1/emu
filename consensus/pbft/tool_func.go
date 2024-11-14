@@ -134,7 +134,7 @@ func computeTCL(txs []*core.Transaction, commitTS time.Time) int64 {
 //		}
 //		msg_send := message.MergeMessage(message.CRelay, rByte)
 //		go networks.TcpDial(msg_send, p.ip_nodeTable[sid][0])
-//		p.pl.Plog.Printf("S%dN%d : sended relay txs to %d\n", p.ShardID, p.NodeID, sid)
+//		p.pl.PLog.Printf("S%dN%d : sended relay txs to %d\n", p.ShardID, p.NodeID, sid)
 //	}
 //	p.CurChain.Txpool.ClearRelayPool()
 //}
@@ -168,7 +168,7 @@ func computeTCL(txs []*core.Transaction, commitTS time.Time) int64 {
 //		msg_send := message.MergeMessage(message.CRelayWithProof, rByte)
 //
 //		go networks.TcpDial(msg_send, p.ip_nodeTable[sid][0])
-//		p.pl.Plog.Printf("S%dN%d : sended relay txs & proofs to %d\n", p.ShardID, p.NodeID, sid)
+//		p.pl.PLog.Printf("S%dN%d : sended relay txs & proofs to %d\n", p.ShardID, p.NodeID, sid)
 //	}
 //	p.CurChain.Txpool.ClearRelayPool()
 //}

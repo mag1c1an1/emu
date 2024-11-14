@@ -80,9 +80,13 @@ func (ttd *TestTxDetail) UpdateMeasureRecord(b *message.BlockInfoMsg) {
 
 func (ttd *TestTxDetail) HandleExtraMessage([]byte) {}
 
+func (ttd *TestTxDetail) Res() (perEpochCTXs []float64, totTxNum float64) {
+	return []float64{}, 0
+}
+
 func (ttd *TestTxDetail) OutputRecord() (perEpochCTXs []float64, totTxNum float64) {
 	ttd.writeToCSV()
-	return []float64{}, 0
+	return ttd.Res()
 }
 
 func (ttd *TestTxDetail) writeToCSV() {

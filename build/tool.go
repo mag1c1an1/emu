@@ -72,7 +72,7 @@ func GenerateExeBatchByIpTable(nodeNum, shardNum int) error {
 		commandFormat = "start cmd /k blockEmulator_Windows_Precompile.exe"
 	default:
 		fileNameFormat = "run_IpAddr=%s.sh"
-		commandFormat = "./emu"
+		commandFormat = "./bin/emu"
 	}
 
 	// generate file for each ip

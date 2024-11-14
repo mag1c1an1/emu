@@ -17,7 +17,7 @@ func (p *ConsensusNode) viewChangePropose() {
 	// load pbftStage as 5, i.e., making a view change
 	p.pbftStage.Store(5)
 
-	p.pl.Plog.Println("Main node is time out, now trying to view change. ")
+	p.pl.PLog.Println("Main node is time out, now trying to view change. ")
 
 	vcMsg := message.ViewChangeMsg{
 		CurView:  int(p.view.Load()),
@@ -34,7 +34,7 @@ func (p *ConsensusNode) viewChangePropose() {
 	networks.Broadcast(p.RunningNode.IpAddr, p.getNeighborNodes(), msgSend)
 	networks.TcpDial(msgSend, p.RunningNode.IpAddr)
 
-	p.pl.Plog.Println("View change message has been broadcast. ")
+	p.pl.PLog.Println("View change message has been broadcast. ")
 }
 
 // handle view change messages.
@@ -50,7 +50,7 @@ func (p *ConsensusNode) handleViewChangeMsg(content []byte) {
 	}
 	p.viewChangeMap[vcData][vcMsg.FromNode] = true
 
-	p.pl.Plog.Println("Received view change message from Node", vcMsg.FromNode)
+	p.pl.PLog.Println("Received view change message from Node", vcMsg.FromNode)
 
 	// if cnt = 2*f+1, then broadcast newView msg
 	if len(p.viewChangeMap[vcData]) == 2*int(p.maliciousNums)+1 {
@@ -82,7 +82,7 @@ func (p *ConsensusNode) handleNewViewMsg(content []byte) {
 	}
 	p.newViewMap[vcData][nvMsg.FromNode] = true
 
-	p.pl.Plog.Println("Received new view message from Node", nvMsg.FromNode)
+	p.pl.PLog.Println("Received new view message from Node", nvMsg.FromNode)
 
 	// if cnt = 2*f+1, then step into the next view.
 	if len(p.newViewMap[vcData]) == 2*int(p.maliciousNums)+1 {
@@ -90,6 +90,6 @@ func (p *ConsensusNode) handleNewViewMsg(content []byte) {
 		p.sequenceID = uint64(nvMsg.NewSeqID)
 		p.pbftStage.Store(1)
 		p.lastCommitTime.Store(time.Now().UnixMilli())
-		p.pl.Plog.Println("New view is updated.")
+		p.pl.PLog.Println("New view is updated.")
 	}
 }

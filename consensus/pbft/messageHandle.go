@@ -51,14 +51,14 @@ func (p *ConsensusNode) Propose() {
 				}
 
 				p.sequenceLock.Lock()
-				p.pl.Plog.Printf("S%dN%d get sequenceLock locked, now trying to propose...\n", p.ShardID, p.NodeID)
+				p.pl.PLog.Printf("S%dN%d get sequenceLock locked, now trying to propose...\n", p.ShardID, p.NodeID)
 				// propose
 				// implement interface to generate propose
 				_, r := p.ihm.HandleInPropose()
 
 				digest := getDigest(r)
 				p.requestPool[string(digest)] = r
-				p.pl.Plog.Printf("S%dN%d put the request into the pool ...\n", p.ShardID, p.NodeID)
+				p.pl.PLog.Printf("S%dN%d put the request into the pool ...\n", p.ShardID, p.NodeID)
 
 				ppMsg := message.PrePrepare{
 					RequestMsg: r,
@@ -79,7 +79,7 @@ func (p *ConsensusNode) Propose() {
 			}()
 
 		case <-p.pStop:
-			p.pl.Plog.Printf("S%dN%d get stopSignal in Propose Routine, now stop...\n", p.ShardID, p.NodeID)
+			p.pl.PLog.Printf("S%dN%d get stopSignal in Propose Routine, now stop...\n", p.ShardID, p.NodeID)
 			return
 		}
 	}
@@ -114,12 +114,12 @@ func (p *ConsensusNode) handlePrePrepare(content []byte) {
 
 	flag := false
 	if digest := getDigest(ppMsg.RequestMsg); string(digest) != string(ppMsg.Digest) {
-		p.pl.Plog.Printf("S%dN%d : the digest is not consistent, so refuse to prepare. \n", p.ShardID, p.NodeID)
+		p.pl.PLog.Printf("S%dN%d : the digest is not consistent, so refuse to prepare. \n", p.ShardID, p.NodeID)
 	} else if p.sequenceID < ppMsg.SeqID {
 		// may have sync issue?
 		p.requestPool[string(getDigest(ppMsg.RequestMsg))] = ppMsg.RequestMsg
 		p.height2Digest[ppMsg.SeqID] = string(getDigest(ppMsg.RequestMsg))
-		p.pl.Plog.Printf("S%dN%d : the Sequence id is not consistent, so refuse to prepare. \n", p.ShardID, p.NodeID)
+		p.pl.PLog.Printf("S%dN%d : the Sequence id is not consistent, so refuse to prepare. \n", p.ShardID, p.NodeID)
 	} else {
 		// do your operation in this interface
 		flag = p.ihm.HandleInPrePrepare(ppMsg)
@@ -141,7 +141,7 @@ func (p *ConsensusNode) handlePrePrepare(content []byte) {
 		msgSend := message.MergeMessage(message.CPrepare, prepareByte)
 		networks.Broadcast(p.RunningNode.IpAddr, p.getNeighborNodes(), msgSend)
 		networks.TcpDial(msgSend, p.RunningNode.IpAddr)
-		p.pl.Plog.Printf("S%dN%d : has broadcast the prepare message \n", p.ShardID, p.NodeID)
+		p.pl.PLog.Printf("S%dN%d : has broadcast the prepare message \n", p.ShardID, p.NodeID)
 
 		// Pbft stage add 1. It means that this round of pbft goes into the next stage, i.e., Prepare stage.
 		p.pbftStage.Add(1)
@@ -152,7 +152,7 @@ func (p *ConsensusNode) handlePrePrepare(content []byte) {
 // If you want to do more operations in the prepare stage, you can implement the interface "ExtraOpInConsensus",
 // and call the function: **ExtraOpInConsensus.HandleInPrepare**
 func (p *ConsensusNode) handlePrepare(content []byte) {
-	p.pl.Plog.Printf("S%dN%d : received the Prepare ...\n", p.ShardID, p.NodeID)
+	p.pl.PLog.Printf("S%dN%d : received the Prepare ...\n", p.ShardID, p.NodeID)
 	// decode the message
 	pMsg := new(message.Prepare)
 	err := json.Unmarshal(content, pMsg)
@@ -174,9 +174,9 @@ func (p *ConsensusNode) handlePrepare(content []byte) {
 	}
 
 	if _, ok := p.requestPool[string(pMsg.Digest)]; !ok {
-		p.pl.Plog.Printf("S%dN%d : doesn't have the digest in the requst pool, refuse to commit\n", p.ShardID, p.NodeID)
+		p.pl.PLog.Printf("S%dN%d : doesn't have the digest in the requst pool, refuse to commit\n", p.ShardID, p.NodeID)
 	} else if p.sequenceID < pMsg.SeqID {
-		p.pl.Plog.Printf("S%dN%d : inconsistent sequence ID, refuse to commit\n", p.ShardID, p.NodeID)
+		p.pl.PLog.Printf("S%dN%d : inconsistent sequence ID: %d(%d), refuse to commit\n", p.ShardID, p.NodeID, p.sequenceID, pMsg.SeqID)
 	} else {
 		// if needed more operations, implement interfaces
 		p.ihm.HandleInPrepare(pMsg)
@@ -188,7 +188,7 @@ func (p *ConsensusNode) handlePrepare(content []byte) {
 		p.lock.Lock()
 		defer p.lock.Unlock()
 		if uint64(cnt) >= 2*p.maliciousNums+1 && !p.isCommitBroadcast[string(pMsg.Digest)] {
-			p.pl.Plog.Printf("S%dN%d : is going to commit\n", p.ShardID, p.NodeID)
+			p.pl.PLog.Printf("S%dN%d : is going to commit\n", p.ShardID, p.NodeID)
 			// generate commit and broadcast
 			c := message.Commit{
 				Digest:     pMsg.Digest,
@@ -203,7 +203,7 @@ func (p *ConsensusNode) handlePrepare(content []byte) {
 			networks.Broadcast(p.RunningNode.IpAddr, p.getNeighborNodes(), msgSend)
 			networks.TcpDial(msgSend, p.RunningNode.IpAddr)
 			p.isCommitBroadcast[string(pMsg.Digest)] = true
-			p.pl.Plog.Printf("S%dN%d : commit is broadcast\n", p.ShardID, p.NodeID)
+			p.pl.PLog.Printf("S%dN%d : commit is broadcast\n", p.ShardID, p.NodeID)
 
 			p.pbftStage.Add(1)
 		}
@@ -235,7 +235,7 @@ func (p *ConsensusNode) handleCommit(content []byte) {
 
 	// stage >= 3 and seqID >= p.seqID
 
-	p.pl.Plog.Printf("S%dN%d received the Commit from ...%d\n", p.ShardID, p.NodeID, cMsg.SenderNode.NodeID)
+	p.pl.PLog.Printf("S%dN%d received the Commit from ...%d\n", p.ShardID, p.NodeID, cMsg.SenderNode.NodeID)
 	p.set2DMap(false, string(cMsg.Digest), cMsg.SenderNode)
 	cnt := len(p.cntCommitConfirm[string(cMsg.Digest)])
 
@@ -243,7 +243,7 @@ func (p *ConsensusNode) handleCommit(content []byte) {
 	defer p.lock.Unlock()
 
 	if uint64(cnt) >= 2*p.maliciousNums+1 && !p.isReply[string(cMsg.Digest)] {
-		p.pl.Plog.Printf("S%dN%d : has received 2f + 1 commits ... \n", p.ShardID, p.NodeID)
+		p.pl.PLog.Printf("S%dN%d : has received 2f + 1 commits ... \n", p.ShardID, p.NodeID)
 		// if this node is left behind, so it need to request blocks
 		if _, ok := p.requestPool[string(cMsg.Digest)]; !ok {
 			p.isReply[string(cMsg.Digest)] = true
@@ -265,24 +265,24 @@ func (p *ConsensusNode) handleCommit(content []byte) {
 				log.Panic()
 			}
 
-			p.pl.Plog.Printf("S%dN%d : is now requesting message (seq %d to %d) ... \n", p.ShardID, p.NodeID, oldRequest.SeqStartHeight, oldRequest.SeqEndHeight)
+			p.pl.PLog.Printf("S%dN%d : is now requesting message (seq %d to %d) ... \n", p.ShardID, p.NodeID, oldRequest.SeqStartHeight, oldRequest.SeqEndHeight)
 			msgSend := message.MergeMessage(message.CRequestOldRequest, b)
 			networks.TcpDial(msgSend, oldRequest.ServerNode.IpAddr)
 		} else {
 			// implement interface
 			p.ihm.HandleInCommit(cMsg)
 			p.isReply[string(cMsg.Digest)] = true
-			p.pl.Plog.Printf("S%dN%d: this round of pbft %d is end \n", p.ShardID, p.NodeID, p.sequenceID)
+			p.pl.PLog.Printf("S%dN%d: this round of pbft %d is end \n", p.ShardID, p.NodeID, p.sequenceID)
 			p.sequenceID += 1
 		}
 
 		p.pbftStage.Store(1)
 		p.lastCommitTime.Store(time.Now().UnixMilli())
 
-		// if this node is a main node, then unlock the sequencelock
+		// if this node is a main node, then unlock the sequence lock
 		if p.NodeID == uint64(p.view.Load()) {
 			p.sequenceLock.Unlock()
-			p.pl.Plog.Printf("S%dN%d get sequenceLock unlocked...\n", p.ShardID, p.NodeID)
+			p.pl.PLog.Printf("S%dN%d get sequenceLock unlocked...\n", p.ShardID, p.NodeID)
 		}
 	}
 }
@@ -301,23 +301,23 @@ func (p *ConsensusNode) handleRequestOldSeq(content []byte) {
 	if err != nil {
 		log.Panic()
 	}
-	p.pl.Plog.Printf("S%dN%d : received the old message requst from ...", p.ShardID, p.NodeID)
+	p.pl.PLog.Printf("S%dN%d : received the old message requst from ...", p.ShardID, p.NodeID)
 	rom.SenderNode.PrintNode()
 
 	oldR := make([]*message.Request, 0)
 	for height := rom.SeqStartHeight; height <= rom.SeqEndHeight; height++ {
 		if _, ok := p.height2Digest[height]; !ok {
-			p.pl.Plog.Printf("S%dN%d : has no this digest to this height %d\n", p.ShardID, p.NodeID, height)
+			p.pl.PLog.Printf("S%dN%d : has no this digest to this height %d\n", p.ShardID, p.NodeID, height)
 			break
 		}
 		if r, ok := p.requestPool[p.height2Digest[height]]; !ok {
-			p.pl.Plog.Printf("S%dN%d : has no this message to this digest %d\n", p.ShardID, p.NodeID, height)
+			p.pl.PLog.Printf("S%dN%d : has no this message to this digest %d\n", p.ShardID, p.NodeID, height)
 			break
 		} else {
 			oldR = append(oldR, r)
 		}
 	}
-	p.pl.Plog.Printf("S%dN%d : has generated the message to be sent\n", p.ShardID, p.NodeID)
+	p.pl.PLog.Printf("S%dN%d : has generated the message to be sent\n", p.ShardID, p.NodeID)
 
 	p.ihm.HandleRequestForOldSeq(rom)
 
@@ -334,7 +334,7 @@ func (p *ConsensusNode) handleRequestOldSeq(content []byte) {
 	}
 	msgSend := message.MergeMessage(message.CSendOldRequest, sbByte)
 	networks.TcpDial(msgSend, rom.SenderNode.IpAddr)
-	p.pl.Plog.Printf("S%dN%d : send blocks\n", p.ShardID, p.NodeID)
+	p.pl.PLog.Printf("S%dN%d : send blocks\n", p.ShardID, p.NodeID)
 }
 
 // node request blocks and receive blocks from the main node
@@ -344,7 +344,7 @@ func (p *ConsensusNode) handleSendOldSeq(content []byte) {
 	if err != nil {
 		log.Panic()
 	}
-	p.pl.Plog.Printf("S%dN%d : has received the SendOldMessage message\n", p.ShardID, p.NodeID)
+	p.pl.PLog.Printf("S%dN%d : has received the SendOldMessage message\n", p.ShardID, p.NodeID)
 
 	// implement interface for new consensus
 	p.ihm.HandleForSequentialRequest(som)
@@ -353,7 +353,7 @@ func (p *ConsensusNode) handleSendOldSeq(content []byte) {
 		p.requestPool[string(getDigest(r))] = r
 		p.height2Digest[uint64(idx)+beginSeq] = string(getDigest(r))
 		p.isReply[string(getDigest(r))] = true
-		p.pl.Plog.Printf("this round of pbft %d is end \n", uint64(idx)+beginSeq)
+		p.pl.PLog.Printf("this round of pbft %d is end \n", uint64(idx)+beginSeq)
 	}
 	p.sequenceID = som.SeqEndHeight + 1
 	if rDigest, ok1 := p.height2Digest[p.sequenceID]; ok1 {
@@ -378,7 +378,7 @@ func (p *ConsensusNode) handleSendOldSeq(content []byte) {
 				// broadcast
 				msgSend := message.MergeMessage(message.CPrepare, prepareByte)
 				networks.Broadcast(p.RunningNode.IpAddr, p.getNeighborNodes(), msgSend)
-				p.pl.Plog.Printf("S%dN%d : has broadcast the prepare message \n", p.ShardID, p.NodeID)
+				p.pl.PLog.Printf("S%dN%d : has broadcast the prepare message \n", p.ShardID, p.NodeID)
 			}
 		}
 	}

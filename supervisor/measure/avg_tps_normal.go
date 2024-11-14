@@ -67,11 +67,7 @@ func (tat *AvgTPSNormal) UpdateMeasureRecord(b *message.BlockInfoMsg) {
 
 func (tat *AvgTPSNormal) HandleExtraMessage([]byte) {}
 
-// OutputRecord output the average TPS
-func (tat *AvgTPSNormal) OutputRecord() (perEpochTPS []float64, totalTPS float64) {
-	tat.writeToCSV()
-
-	// calculate the simple result
+func (tat *AvgTPSNormal) Res() (perEpochTPS []float64, totalTPS float64) {
 	perEpochTPS = make([]float64, tat.epochID+1)
 	totalTxNum := 0.0
 	eTime := time.Now()
@@ -89,6 +85,14 @@ func (tat *AvgTPSNormal) OutputRecord() (perEpochTPS []float64, totalTPS float64
 	}
 	totalTPS = totalTxNum / (lTime.Sub(eTime).Seconds())
 	return
+}
+
+// OutputRecord output the average TPS
+func (tat *AvgTPSNormal) OutputRecord() (perEpochTPS []float64, totalTPS float64) {
+	tat.writeToCSV()
+
+	// calculate the simple result
+	return tat.Res()
 }
 
 func (tat *AvgTPSNormal) writeToCSV() {

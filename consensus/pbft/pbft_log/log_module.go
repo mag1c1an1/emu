@@ -10,7 +10,7 @@ import (
 )
 
 type PbftLog struct {
-	Plog *log.Logger
+	PLog *log.Logger
 }
 
 func NewPbftLog(sid, nid uint64) *PbftLog {
@@ -30,6 +30,6 @@ func NewPbftLog(sid, nid uint64) *PbftLog {
 	fmt.Println()
 
 	return &PbftLog{
-		Plog: pl,
+		PLog: pl,
 	}
 }

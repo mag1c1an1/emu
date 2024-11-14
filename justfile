@@ -1,5 +1,5 @@
 build:
-    go build
+    go build -o ./bin
 
 sv:
     go run main.go -c -S 1 -N 4

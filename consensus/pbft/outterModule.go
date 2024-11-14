@@ -28,5 +28,5 @@ func (nohm *NormalExtraOuterHandleMod) handleInjectTx(content []byte) {
 		log.Panic(err)
 	}
 	nohm.pbftNode.CurChain.Txpool.AddTxs2Pool(it.Txs)
-	nohm.pbftNode.pl.Plog.Printf("S%dN%d : has handled injected txs msg, txs: %d \n", nohm.pbftNode.ShardID, nohm.pbftNode.NodeID, len(it.Txs))
+	nohm.pbftNode.pl.PLog.Printf("S%dN%d : has handled injected txs msg, txs: %d \n", nohm.pbftNode.ShardID, nohm.pbftNode.NodeID, len(it.Txs))
 }
